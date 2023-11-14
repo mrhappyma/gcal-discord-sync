@@ -8,5 +8,6 @@ const envSchema = z.object({
   BOT_TOKEN: z.string(),
   GUILD_ID: z.string(),
   DATABASE_URL: z.string(),
+  REDIRECT_URL: z.string().optional(),
 });
 export default envSchema.parse(process.env);

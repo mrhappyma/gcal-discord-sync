@@ -27,6 +27,7 @@ export interface LocalAuthOptions {
   clientSecret: string;
   projectId: string;
   scopes: string[] | string;
+  redirectUrl?: string;
 }
 
 // Open an http server to accept the oauth callback. In this
@@ -42,15 +43,12 @@ export async function authenticate(
     token_uri: "https://oauth2.googleapis.com/token",
     auth_provider_x509_cert_url: "https://www.googleapis.com/oauth2/v1/certs",
     client_secret: options.clientSecret,
-    redirect_uris: ["http://localhost"],
+    redirect_uris: [options.redirectUrl],
   };
   if (!keys.redirect_uris || keys.redirect_uris.length === 0) {
     throw new Error(invalidRedirectUri);
   }
-  const redirectUri = new URL(keys.redirect_uris[0] ?? "http://localhost");
-  if (redirectUri.hostname !== "localhost") {
-    throw new Error(invalidRedirectUri);
-  }
+  const redirectUri = new URL(keys.redirect_uris[0] ?? "http://localhost:4200");
 
   // create an oAuth client to authorize the API call
   const client = new OAuth2Client({
@@ -61,7 +59,7 @@ export async function authenticate(
   return new Promise((resolve, reject) => {
     const server = http.createServer(async (req, res) => {
       try {
-        const url = new URL(req.url!, "http://localhost:3000");
+        const url = new URL(req.url!, redirectUri);
         if (url.pathname !== redirectUri.pathname) {
           res.end("Invalid callback URL");
           return;
@@ -94,11 +92,11 @@ export async function authenticate(
       }
     });
 
-    const listenPort = 0;
+    const listenPort = 4200;
 
     server.listen(listenPort, () => {
       const address = server.address();
-      if (isAddressInfo(address)) {
+      if (isAddressInfo(address) && redirectUri.hostname == "localhost") {
         redirectUri.port = String(address.port);
       }
       const scopes = arrify(options.scopes || []);

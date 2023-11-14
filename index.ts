@@ -46,6 +46,7 @@ const authorize = async () => {
     clientId: env.CLIENT_ID,
     clientSecret: env.CLIENT_SECRET,
     projectId: env.PROJECT_ID,
+    redirectUrl: env.REDIRECT_URL,
   });
   if (client?.credentials) {
     await saveCredentials(client);
@@ -57,6 +58,9 @@ const auth = await authorize();
 const calendar = google.calendar({ version: "v3", auth });
 const bot = new Client({
   intents: ["GuildScheduledEvents"],
+  presence: {
+    status: "invisible",
+  },
 });
 await bot.login(env.BOT_TOKEN);
 const guild = await bot.guilds.fetch(env.GUILD_ID);
