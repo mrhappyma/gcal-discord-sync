@@ -14,3 +14,11 @@ model Event {
   discordId String @id
   googleId  String @unique
 }
+
+model Token {
+  id            Int    @id @default(autoincrement())
+  type          String
+  client_id     String
+  client_secret String
+  refresh_token String
+}

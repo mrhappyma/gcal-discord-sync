@@ -13,27 +13,35 @@ import {
 import Cron from "croner";
 import { PrismaClient } from "@prisma/client";
 
+const prisma = new PrismaClient();
+
 const SCOPES = ["https://www.googleapis.com/auth/calendar"];
-const TOKEN_PATH = path.join(process.cwd(), "token.json");
 
 const loadSavedCredentialsIfExist = async () => {
-  try {
-    const content = await fs.readFile(TOKEN_PATH);
-    const credentials = JSON.parse(content);
-    return google.auth.fromJSON(credentials) as OAuth2Client;
-  } catch (err) {
-    return null;
-  }
+  const credentials = await prisma.token.findFirst();
+  if (!credentials) return null;
+  return google.auth.fromJSON(credentials) as OAuth2Client;
 };
 
 const saveCredentials = async (client: OAuth2Client) => {
-  const payload = JSON.stringify({
-    type: "authorized_user",
-    client_id: env.CLIENT_ID,
-    client_secret: env.CLIENT_SECRET,
-    refresh_token: client.credentials.refresh_token,
+  await prisma.token.upsert({
+    where: {
+      id: 1,
+    },
+    create: {
+      id: 1,
+      type: "authorized_user",
+      client_id: env.CLIENT_ID,
+      client_secret: env.CLIENT_SECRET,
+      refresh_token: client.credentials.refresh_token!,
+    },
+    update: {
+      type: "authorized_user",
+      client_id: env.CLIENT_ID,
+      client_secret: env.CLIENT_SECRET,
+      refresh_token: client.credentials.refresh_token!,
+    },
   });
-  await fs.writeFile(TOKEN_PATH, payload);
 };
 
 const authorize = async () => {
@@ -64,7 +72,6 @@ const bot = new Client({
 });
 await bot.login(env.BOT_TOKEN);
 const guild = await bot.guilds.fetch(env.GUILD_ID);
-const prisma = new PrismaClient();
 
 const createMissingEvents = async () => {
   const res = await calendar.events.list({
