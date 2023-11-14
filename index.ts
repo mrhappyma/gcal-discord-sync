@@ -11,6 +11,7 @@ import {
   GuildScheduledEventPrivacyLevel,
 } from "discord.js";
 import Cron from "croner";
+import { PrismaClient } from "@prisma/client";
 
 const SCOPES = ["https://www.googleapis.com/auth/calendar"];
 const TOKEN_PATH = path.join(process.cwd(), "token.json");
@@ -54,12 +55,12 @@ const authorize = async () => {
 
 const auth = await authorize();
 const calendar = google.calendar({ version: "v3", auth });
-
 const bot = new Client({
   intents: ["GuildScheduledEvents"],
 });
 await bot.login(env.BOT_TOKEN);
 const guild = await bot.guilds.fetch(env.GUILD_ID);
+const prisma = new PrismaClient();
 
 const createMissingEvents = async () => {
   const res = await calendar.events.list({
@@ -70,39 +71,60 @@ const createMissingEvents = async () => {
     orderBy: "startTime",
   });
 
-  // filter out events over 2 weeks away
+  // filter out events over a month away
   let events = res.data.items!.filter((event) => {
     const eventDate = new Date(
       event.start?.dateTime ?? event.start?.date ?? ""
     );
     const now = new Date();
-    const twoWeeks = new Date();
-    twoWeeks.setDate(now.getDate() + 14);
-    return eventDate < twoWeeks;
+    const month = new Date();
+    month.setDate(now.getDate() + 30);
+    return eventDate < month;
   });
 
-  const existingEvents = await guild.scheduledEvents.fetch();
+  const discordEvents = await guild.scheduledEvents.fetch();
 
-  // filter out events that already exist (have the event url in the description)
+  let linkedEvents = await prisma.event.findMany();
+  // events that dont exist in discord anymore - delete and remove from linkedEvents
+  const eventsToDelete = linkedEvents.filter((event) => {
+    return !discordEvents.has(event.discordId);
+  });
+  for (const event of eventsToDelete) {
+    await prisma.event.delete({
+      where: {
+        discordId: event.discordId,
+      },
+    });
+    linkedEvents = linkedEvents.filter((e) => e.discordId !== event.discordId);
+  }
+
+  // events that exist in discord - remove from events
+  const eventsToIgnore = linkedEvents.map((event) => event.googleId);
   events = events.filter((event) => {
-    return !existingEvents.some((existingEvent) =>
-      existingEvent.description?.includes(event.htmlLink!)
-    );
+    return !eventsToIgnore.includes(event.id!);
   });
 
   for (const event of events) {
-    guild.scheduledEvents.create({
+    const devent = await guild.scheduledEvents.create({
       entityType: GuildScheduledEventEntityType.External,
       name: event.summary!,
       scheduledStartTime: event.start!.dateTime!,
       scheduledEndTime: event.end!.dateTime!,
-      description: `${event.description ?? ""}\n\n${event.htmlLink}`,
+      description: event.description ?? undefined,
       entityMetadata: {
         location: event.location ?? "",
       },
       privacyLevel: GuildScheduledEventPrivacyLevel.GuildOnly,
     });
+    await prisma.event.create({
+      data: {
+        discordId: devent.id,
+        googleId: event.id!,
+      },
+    });
   }
+
+  console.log(`Created ${events.length} events`);
 };
 
 createMissingEvents();

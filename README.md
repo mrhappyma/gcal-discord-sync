@@ -1,5 +1,6 @@
 # gcal-discord-sync
-syncs upcoming google calendar events in the next 2 weeks to discord (cron every 3 hours)
+
+syncs upcoming google calendar events in the next 30 days to discord (cron every 3 hours)
 
 a little clunky but does the job
 
@@ -10,6 +11,7 @@ a little clunky but does the job
 [Create your Discord bot](https://discord.com/developers/applications), and add it to your server.
 
 Set your environment variables:
+
 ```
 CLIENT_ID = # google client id
 PROJECT_ID = # google project id
@@ -17,6 +19,7 @@ CLIENT_SECRET = # google client secret
 CALENDAR_ID = # source google calendar id
 BOT_TOKEN = # discord bot token
 GUILD_ID = # target discord guild id
+DATABASE_URL = # oh yeah you need a postgres database too
 ```
 
 `bun install` and `bun .` and you're good to go.

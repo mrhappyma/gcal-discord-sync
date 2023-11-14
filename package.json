@@ -3,12 +3,14 @@
   "module": "index.ts",
   "type": "module",
   "devDependencies": {
-    "bun-types": "latest"
+    "bun-types": "latest",
+    "prisma": "^5.5.2"
   },
   "peerDependencies": {
     "typescript": "^5.0.0"
   },
   "dependencies": {
+    "@prisma/client": "^5.5.2",
     "arrify": "^3.0.0",
     "croner": "^7.0.4",
     "discord.js": "^14.13.0",

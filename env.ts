@@ -7,5 +7,6 @@ const envSchema = z.object({
   CALENDAR_ID: z.string(),
   BOT_TOKEN: z.string(),
   GUILD_ID: z.string(),
+  DATABASE_URL: z.string(),
 });
 export default envSchema.parse(process.env);
