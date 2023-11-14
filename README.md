@@ -6,7 +6,7 @@ a little clunky but does the job
 
 ## Setup
 
-[Create a Google Cloud project](https://console.cloud.google.com/), and [enable the calendar API](https://console.cloud.google.com/flows/enableapi?apiid=calendar-json.googleapis.com). [Configure the consent screen](https://console.cloud.google.com/apis/credentials/consent), you don't need any scopes and you should add yourself as a test user. Most of the other fields don't matter. [Create an OAuth client ID](https://console.cloud.google.com/apis/credentials) for a desktop application. Click OK through most of the prompts, and store your client ID and secret somewhere.
+[Create a Google Cloud project](https://console.cloud.google.com/), and [enable the calendar API](https://console.cloud.google.com/flows/enableapi?apiid=calendar-json.googleapis.com). [Configure the consent screen](https://console.cloud.google.com/apis/credentials/consent), you don't need any scopes and you should add yourself as a test user. Most of the other fields don't matter. [Create an OAuth client ID](https://console.cloud.google.com/apis/credentials) for a desktop application (or web if you're deploying somewhere. set the redirect url env variable then.). Click OK through most of the prompts, and store your client ID and secret somewhere.
 
 [Create your Discord bot](https://discord.com/developers/applications), and add it to your server.
 
@@ -20,6 +20,7 @@ CALENDAR_ID = # source google calendar id
 BOT_TOKEN = # discord bot token
 GUILD_ID = # target discord guild id
 DATABASE_URL = # oh yeah you need a postgres database too
+REDIRECT_URL = #optional, helpful if you're deploying it somewhere. no trailing slash.
 ```
 
-`bun install` and `bun .` and you're good to go.
+`bun install` `bunx prisma db push` and `bun .` and you're good to go.
