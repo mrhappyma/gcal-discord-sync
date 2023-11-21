@@ -95,19 +95,7 @@ const createMissingEvents = async () => {
 
   const discordEvents = await guild.scheduledEvents.fetch();
 
-  let linkedEvents = await prisma.event.findMany();
-  // events that dont exist in discord anymore - delete and remove from linkedEvents
-  const eventsToDelete = linkedEvents.filter((event) => {
-    return !discordEvents.has(event.discordId);
-  });
-  for (const event of eventsToDelete) {
-    await prisma.event.delete({
-      where: {
-        discordId: event.discordId,
-      },
-    });
-    linkedEvents = linkedEvents.filter((e) => e.discordId !== event.discordId);
-  }
+  const linkedEvents = await prisma.event.findMany();
 
   // events that exist in discord - remove from events
   const eventsToIgnore = linkedEvents.map((event) => event.googleId);
