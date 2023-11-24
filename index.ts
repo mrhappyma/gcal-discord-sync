@@ -1,6 +1,5 @@
-import path from "path";
-const fs = require("fs").promises;
-import process from "process";
+console.log("Starting");
+
 import { authenticate } from "./auth";
 import { google } from "googleapis";
 import { OAuth2Client } from "google-auth-library";
@@ -73,9 +72,22 @@ const bot = new Client({
 await bot.login(env.BOT_TOKEN);
 const guild = await bot.guilds.fetch(env.GUILD_ID);
 
-const createMissingEvents = async () => {
+bot.on("guildScheduledEventCreate", async (event) => {
+  const googleEvent = await prisma.event.findFirst({
+    where: {
+      discordId: event.id,
+    },
+  });
+  if (!googleEvent) return;
+  await calendar.events.delete({
+    calendarId: env.CALENDAR_ID,
+    eventId: googleEvent.googleId,
+  });
+});
+
+const syncFromGoogle = async () => {
   const res = await calendar.events.list({
-    calendarId: "admin@hersheytroop203.org",
+    calendarId: env.CALENDAR_ID,
     timeMin: new Date().toISOString(),
     maxResults: 10,
     singleEvents: true,
@@ -93,9 +105,21 @@ const createMissingEvents = async () => {
     return eventDate < month;
   });
 
-  const discordEvents = await guild.scheduledEvents.fetch();
-
   const linkedEvents = await prisma.event.findMany();
+  // events that no longer exist in google - remove from db and discord
+  const eventsToRemove = linkedEvents.filter((event) => {
+    return !events.find((e) => e.id === event.googleId);
+  });
+  for (const event of eventsToRemove) {
+    const devent = await guild.scheduledEvents.fetch(event.discordId);
+    await devent.delete();
+    await prisma.event.delete({
+      where: {
+        discordId: event.discordId,
+      },
+    });
+    linkedEvents.splice(linkedEvents.indexOf(event), 1);
+  }
 
   // events that exist in discord - remove from events
   const eventsToIgnore = linkedEvents.map((event) => event.googleId);
@@ -126,6 +150,5 @@ const createMissingEvents = async () => {
   console.log(`Created ${events.length} events`);
 };
 
-createMissingEvents();
-
-Cron("0 */3 * * *", createMissingEvents);
+syncFromGoogle();
+Cron("0 */3 * * *", syncFromGoogle);
