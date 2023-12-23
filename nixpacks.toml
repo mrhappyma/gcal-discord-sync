@@ -1,0 +1,8 @@
+[phases.install]
+cmds = ["pnpm install"]
+
+[phases.build]
+cmds = ["npx prisma generate", "npx tsc"]
+
+[start]
+cmd = "node dist/index.js"

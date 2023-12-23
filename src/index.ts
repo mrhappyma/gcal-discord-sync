@@ -1,9 +1,9 @@
 console.log("Starting");
 
-import { authenticate } from "./auth";
+import { authenticate } from "./auth.js";
 import { google } from "googleapis";
 import { OAuth2Client } from "google-auth-library";
-import env from "./env";
+import env from "./env.js";
 import {
   Client,
   GuildScheduledEventEntityType,

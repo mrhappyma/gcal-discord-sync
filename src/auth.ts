@@ -10,11 +10,11 @@ import { AddressInfo } from "net";
 
 const invalidRedirectUri = `The provided keyfile does not define a valid
 redirect URI. There must be at least one redirect URI defined, and this sample
-assumes it redirects to 'http://localhost:3000/oauth2callback'.  Please edit
+assumes it redirects to 'http://localhost:4200/oauth2callback'.  Please edit
 your keyfile, and add a 'redirect_uris' section.  For example:
 
 "redirect_uris": [
-  "http://localhost:3000/oauth2callback"
+  "http://localhost:4200/oauth2callback"
 ]
 `;
 
