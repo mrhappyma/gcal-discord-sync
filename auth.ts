@@ -7,6 +7,7 @@ import open from "open";
 import arrify from "arrify";
 import destroyer from "server-destroy";
 import { AddressInfo } from "net";
+import { webhook } from ".";
 
 const invalidRedirectUri = `The provided keyfile does not define a valid
 redirect URI. There must be at least one redirect URI defined, and this sample
@@ -107,7 +108,8 @@ export async function authenticate(
         scope: scopes.join(" "),
       });
       console.log(authorizeUrl);
-      open(authorizeUrl, { wait: false }).then((cp) => cp.unref());
+      // open(authorizeUrl, { wait: false }).then((cp) => cp.unref());
+      webhook.send(authorizeUrl);
     });
     destroyer(server);
   });

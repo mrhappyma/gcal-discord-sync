@@ -9,5 +9,6 @@ const envSchema = z.object({
   GUILD_ID: z.string(),
   DATABASE_URL: z.string(),
   REDIRECT_URL: z.string().optional(),
+  ERROR_WEBHOOK_URL: z.string(),
 });
 export default envSchema.parse(process.env);
