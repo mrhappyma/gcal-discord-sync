@@ -88,7 +88,7 @@ const bot = new Client({
 await bot.login(env.BOT_TOKEN);
 const guild = await bot.guilds.fetch(env.GUILD_ID);
 
-bot.on("guildScheduledEventCreate", async (event) => {
+bot.on("guildScheduledEventDelete", async (event) => {
   const googleEvent = await prisma.event.findFirst({
     where: {
       discordId: event.id,
@@ -99,6 +99,7 @@ bot.on("guildScheduledEventCreate", async (event) => {
     calendarId: env.CALENDAR_ID,
     eventId: googleEvent.googleId,
   });
+  await webhook.send(`deleting event ${googleEvent.googleId} from gcal, as instructed...`)
 });
 
 const syncFromGoogle = async () => {
