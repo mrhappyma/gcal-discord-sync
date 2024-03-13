@@ -88,7 +88,10 @@ const bot = new Client({
 await bot.login(env.BOT_TOKEN);
 const guild = await bot.guilds.fetch(env.GUILD_ID);
 
+let no = false;
+
 bot.on("guildScheduledEventDelete", async (event) => {
+  if (no) return;
   const googleEvent = await prisma.event.findFirst({
     where: {
       discordId: event.id,
@@ -99,7 +102,9 @@ bot.on("guildScheduledEventDelete", async (event) => {
     calendarId: env.CALENDAR_ID,
     eventId: googleEvent.googleId,
   });
-  await webhook.send(`deleting event ${googleEvent.googleId} from gcal, as instructed...`)
+  await webhook.send(
+    `deleting event ${googleEvent.googleId} from gcal, as instructed...`
+  );
 });
 
 const syncFromGoogle = async () => {
@@ -130,12 +135,14 @@ const syncFromGoogle = async () => {
     });
     for (const event of eventsToRemove) {
       const devent = await guild.scheduledEvents.fetch(event.discordId);
+      no = true;
       await devent.delete();
       await prisma.event.delete({
         where: {
           discordId: event.discordId,
         },
       });
+      no = false;
       linkedEvents.splice(linkedEvents.indexOf(event), 1);
     }
 
