@@ -1,0 +1,7 @@
+providers = ["..."]
+
+[phases.install]
+nixPkgs = ["...", "openssl"]
+
+[start]
+cmd = "bun run ."
